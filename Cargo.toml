@@ -1,0 +1,10 @@
+[package]
+name = "db-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+iced = "0.12.1"
+rand = "0.9.0"
+rusqlite = { version = "0.32.0", features = ["bundled"] }
+#libsqlite3-sys = {version = "0.27.0", features = ["bundled"] }
