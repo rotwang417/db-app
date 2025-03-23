@@ -45,18 +45,14 @@ impl Application for CitiesStates {
     fn view(&self) -> Element<Self::Message> {
         Column::new()
             .push(Text::new(&self.message))
-            // .push(Button::new(&mut self.button_state).on_press(Message::FetchWord))
-            // .push(button(&mut self.button_state).on_press(Message::FetchWord))
             .push(Button::new(Text::new("Fetch Random Word")).on_press(Message::FetchWord))
-
-            // .push(button(&mut self.button_state, Text::new("Fetch random word")).on_press(Message::FetchWord))
             .into()
     }
 }
 
 fn fetch_random_word() -> Result<String> {
     println!("Current directory: {:?}", std::env::current_dir());
-    let connection = match Connection::open("resources/database.db")
+    let connection = match Connection::open("resources/db-cities-states.db")
     {
         Ok(c) => c,
         Err(e) => {
@@ -66,26 +62,24 @@ fn fetch_random_word() -> Result<String> {
     };
     println!("Database connection established.");
 
-    let mut stmt = match connection.prepare("SELECT text FROM messages") {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("Failed to build query: {}", e);
-            return Err(e);
-        }
-    };;
-    let words: Vec<String> = match stmt.query_map([], |row| row.get(0)) {
-        Ok(rows) => rows.filter_map(Result::ok).collect(),
-        Err(e) => {
-            eprintln!("Failed to query data: {}", e);
-            return Err(e);
-        }
-    };
+    let categories = ["City", "Country", "Plant"];
+    let letters = "ABCDE".chars().collect::<Vec<_>>();
 
-    if words.is_empty() {
-        return Ok(String::from("No words found"));
+    let random_category = categories[rand::thread_rng().gen_range(0..categories.len())];
+    let random_letter = letters[rand::thread_rng().gen_range(0..letters.len())];
+
+    let table_name = format!("{}_{}", random_category, random_letter);
+    let query = format!("SELECT name FROM {} ORDER BY RANDOM() LIMIT 1", table_name);
+
+    let mut stmt = connection.prepare(&query)?;
+    let mut rows = stmt.query([])?;
+
+    if let Some(row) = rows.next()? {
+        let value: String = row.get(0)?;
+        return Ok(format!("Random {} ({}): {}", random_category, random_letter, value));
     }
-    let random_index = rand::thread_rng().gen_range(0..words.len());
-    Ok(words[random_index].clone())
+
+    Ok(format!("No data found in table {}", table_name))
 }
 
 fn main() -> iced::Result {
