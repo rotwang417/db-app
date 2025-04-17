@@ -13,7 +13,7 @@ pub fn fetch_random_word() -> Result<String> {
     };
     println!("Database connection established.");
 
-    let categories = ["City", "Country", "Plant"];
+    let categories = ["City", "Country", "Plant", "Animal", "River"];
     let letters = "ABCDE".chars().collect::<Vec<_>>();
 
     let random_category = categories[rand::thread_rng().gen_range(0..categories.len())];
